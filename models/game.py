@@ -1,5 +1,4 @@
 from constants.constants import MAX_BOARD_SIZE, MIN_BOARD_SIZE
-from strategies.strategies import SearchStrategy
 from string import ascii_uppercase
 
 alphabet = list(ascii_uppercase)
@@ -16,7 +15,7 @@ class Token:
     def __init__(self, row, col, initial_state):
         self.x = row
         self.y = col
-        self.is_white_face = initial_state == 0
+        self.is_white_face = initial_state == "0"
         self.__assign_identifier()
 
     def __assign_identifier(self):
@@ -47,10 +46,10 @@ class Solver:
     Context for SearchStrategy/Solver for the puzzle
     """
 
-    def __init__(self, strategy: SearchStrategy):
+    def __init__(self, strategy):
         self.strategy = strategy
 
-    def set_strategy(self, strategy: SearchStrategy):
+    def set_strategy(self, strategy):
         self.strategy = strategy
 
     def solve(self, initial_board: Board):
