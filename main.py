@@ -14,7 +14,8 @@ def main():
         strategy = DepthFirstSearchStrategy(game.get_max_depth())
         solver = Solver(strategy)
 
-        print(game_board)
+        # print(game_board)
+        print(game_board.get_state_stream())
         # solver.solve(game_board)
 
 

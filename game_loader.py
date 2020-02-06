@@ -3,7 +3,7 @@ from models.game import Game
 
 class GameLoader:
     """
-    Parses input file and sets up the game board
+    Parses input file and sets up the games
     """
 
     def __init__(self, input_file_path):

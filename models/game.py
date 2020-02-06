@@ -1,5 +1,6 @@
 from constants.constants import MAX_BOARD_SIZE, MIN_BOARD_SIZE
 from string import ascii_uppercase
+from typing import List
 
 alphabet = list(ascii_uppercase)
 
@@ -19,10 +20,13 @@ class Token:
         self.__assign_identifier()
 
     def __assign_identifier(self):
-        self.identifier = "{}{}".format(alphabet[self.x], self.y)
+        self._identifier = "{}{}".format(alphabet[self.x], self.y)
 
     def flip(self):
         self.is_white_face = not self.is_white_face
+
+    def get_identifier(self):
+        return self._identifier
 
     def __str__(self):
         return "0" if self.is_white_face else "1"
@@ -34,11 +38,32 @@ class Board:
     """
 
     def __init__(self, initial_state_stream, size):
+        self.size = size
         self.content = [[Token(row, col, initial_state_stream[col + row * size])
                          for col in range(size)] for row in range(size)]
+        self.remaining_black_dots = self.__init_remaining_black_dots()
 
-    def __str__(self):
-        return ' '.join([x_token.__str__() for y_token in self.content for x_token in y_token])
+    def __init_remaining_black_dots(self):
+        agg = []  # type: List[Token]
+
+        for row in range(self.size):
+            for col in range(self.size):
+                if not self.content[row][col].is_white_face:
+                    agg.append(self.content[row][col])
+
+        return agg
+
+    def __stream_iterator(self, joiner):
+        return joiner.join([x_token.__str__() for y_token in self.content for x_token in y_token])
+
+    def get_state_stream(self):
+        return self.__stream_iterator('')
+
+    def is_final_state(self):
+        return len(self.__init_remaining_black_dots()) == 0
+
+    def __str__(self):  # hash
+        return self.__stream_iterator(' ')
 
 
 class Solver:
@@ -81,3 +106,17 @@ class Game:
 
     def get_max_length(self):
         return self.max_length
+
+
+class MoveSnapshot:
+    """
+    Model that will keep track of a token that was touched, as well as the resulting
+    board state that resulted from the touch
+    """
+
+    def __init__(self, token: Token, board_snapshot: str):
+        self.token: Token = token
+        self.board_snapshot = board_snapshot
+
+    def __str__(self):
+        return '{} {}'.format(self.token.get_identifier(), self.board_snapshot)
