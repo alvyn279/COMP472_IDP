@@ -4,8 +4,6 @@ from strategies.strategies import DepthFirstSearchStrategy
 
 
 def main():
-    print("This is the main execution")
-
     game_loader = GameLoader("input/sample_input")
     games = game_loader.get_games()
 
@@ -15,8 +13,8 @@ def main():
         solver = Solver(strategy)
 
         # print(game_board)
-        print(game_board.get_state_stream())
-        # solver.solve(game_board)
+        # print(game_board.get_state_stream())
+        solver.solve(game_board)
 
 
 if __name__ == "__main__":

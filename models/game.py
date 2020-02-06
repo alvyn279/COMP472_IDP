@@ -1,6 +1,7 @@
 from constants.constants import MAX_BOARD_SIZE, MIN_BOARD_SIZE
 from string import ascii_uppercase
 from typing import List
+import time
 
 alphabet = list(ascii_uppercase)
 
@@ -78,7 +79,10 @@ class Solver:
         self.strategy = strategy
 
     def solve(self, initial_board: Board):
+        start = time.time()
         self.strategy.execute(initial_board)
+        end = time.time()
+        print("Time for {} : {} seconds".format(type(self.strategy).__name__, end - start))
 
 
 class Game:
