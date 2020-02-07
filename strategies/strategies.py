@@ -28,10 +28,6 @@ class DepthFirstSearchStrategy(SearchStrategy):
         self.result_move_snapshots = []  # type: List[MoveSnapshot]
         self.shortest_move_snapshots = []  # type: List[MoveSnapshot]
 
-    @staticmethod
-    def __board_snapshot_tuple_sorter(item):
-        return item[0]
-
     def __alert_end(self):
         if len(self.shortest_move_snapshots) != 0:
             print("\nFound solution!\n")
@@ -100,7 +96,7 @@ class DepthFirstSearchStrategy(SearchStrategy):
 
             # sort children according to first occurrence of a white
             children = sorted(children,
-                              key=self.__board_snapshot_tuple_sorter,
+                              key=lambda _board_snapshot_tuple: _board_snapshot_tuple[0],
                               reverse=True)
             # print(children)
             self.open_list += children
