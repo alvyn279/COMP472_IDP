@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from models.game import Board, MoveSnapshot, Game
 from typing import List, Tuple
+from constants.constants import NO_SOLUTION, FOUND_SOLUTION, DFS, REL_PATH_TO_SEARCH, REL_PATH_TO_SOLUTION
 import os
-
-NO_SOLUTION = 'No solution found'
-FOUND_SOLUTION = 'Found solution!'
 
 
 class SearchStrategy(ABC):
@@ -33,7 +31,7 @@ class DepthFirstSearchStrategy(SearchStrategy):
     Follows the concept of depth-limited search
     """
 
-    name = 'dfs'
+    name = DFS
 
     def __init__(self, game: Game):
         self.game = game
@@ -51,7 +49,7 @@ class DepthFirstSearchStrategy(SearchStrategy):
         """
         cur_dir = os.path.dirname(__file__)
         # solution file
-        abs_sol_path = os.path.join(cur_dir, "./../output/{}_{}_solution.txt".format(self.game.game_id, self.name))
+        abs_sol_path = os.path.join(cur_dir, REL_PATH_TO_SOLUTION.format(self.game.game_id, self.name))
         sol_f = open(abs_sol_path, "w+")
         if len(self.shortest_move_snapshots) == 0:
             sol_f.write(NO_SOLUTION)
@@ -61,7 +59,7 @@ class DepthFirstSearchStrategy(SearchStrategy):
         sol_f.close()
 
         # search file
-        abs_srch_path = os.path.join(cur_dir, "./../output/{}_{}_search.txt".format(self.game.game_id, self.name))
+        abs_srch_path = os.path.join(cur_dir, REL_PATH_TO_SEARCH.format(self.game.game_id, self.name))
         srch_f = open(abs_srch_path, "w+")
         for search_seq_snapshot in self.search_seq_snapshots:
             srch_f.write("0\t0\t0\t{}\n".format(search_seq_snapshot.board_snapshot.replace(' ', '')))
