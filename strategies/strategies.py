@@ -27,8 +27,14 @@ class DepthFirstSearchStrategy(SearchStrategy):
         self.closed_list_set = set()
         self.result_move_snapshots = []  # type: List[MoveSnapshot]
 
-    def __board_snapshot_tuple_sorter(self, item):
+    @staticmethod
+    def __board_snapshot_tuple_sorter(item):
         return item[0]
+
+    def __alert_pos(self):
+        print("\nFound solution!\n")
+        for result_move_snapshot in self.result_move_snapshots:
+            print(result_move_snapshot)
 
     def execute(self, board: Board):
         self.current_depth = 1
@@ -38,10 +44,8 @@ class DepthFirstSearchStrategy(SearchStrategy):
             board_to_test, snapshot = self.open_list.pop()
 
             if board_to_test.is_final_state():
-                print("\nFound solution!\n")
                 self.result_move_snapshots.append(snapshot)
-                for result_move_snapshot in self.result_move_snapshots:
-                    print(result_move_snapshot)
+                self.__alert_pos()
                 return
             else:
                 self.closed_list_set.add(board_to_test.get_state_stream())
@@ -68,19 +72,15 @@ class DepthFirstSearchStrategy(SearchStrategy):
                     y = token_to_test.y
 
                     # change state after touch
-                    new_board.content[x][y].is_white_face = not new_board.content[x][y].is_white_face
+                    new_board.content[x][y].flip()
                     if x > 0:
-                        new_board.content[x - 1][y].is_white_face = not new_board.content[x - 1][
-                            y].is_white_face
+                        new_board.content[x - 1][y].flip()
                     if x < (len(new_board.content) - 1):
-                        new_board.content[x + 1][y].is_white_face = not new_board.content[x + 1][
-                            y].is_white_face
+                        new_board.content[x + 1][y].flip()
                     if y > 0:
-                        new_board.content[x][y - 1].is_white_face = not new_board.content[x][
-                            y - 1].is_white_face
+                        new_board.content[x][y - 1].flip()
                     if y < (len(new_board.content[x]) - 1):
-                        new_board.content[x][y + 1].is_white_face = not new_board.content[x][
-                            y + 1].is_white_face
+                        new_board.content[x][y + 1].flip()
 
                     if new_board.get_state_stream() not in self.closed_list_set:
                         children.insert(0, (
@@ -89,7 +89,9 @@ class DepthFirstSearchStrategy(SearchStrategy):
                         ))
 
             # sort children according to first occurrence of a white
-            children = sorted(children, key=self.__board_snapshot_tuple_sorter, reverse=True)
+            children = sorted(children,
+                              key=self.__board_snapshot_tuple_sorter,
+                              reverse=True)
             # print(children)
             self.open_list += children
 

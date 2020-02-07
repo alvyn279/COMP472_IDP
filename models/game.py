@@ -14,7 +14,7 @@ class Token:
         - black face
     """
 
-    def __init__(self, row, col, initial_state):
+    def __init__(self, row: int, col: int, initial_state: str):
         self.x = row
         self.y = col
         self.is_white_face = initial_state == "0"
@@ -38,7 +38,7 @@ class Board:
     Indonesian Dot Puzzle board holding 2d of token
     """
 
-    def __init__(self, initial_state_stream, size):
+    def __init__(self, initial_state_stream: str, size: int):
         self.size = size
         self.content = [[Token(row, col, initial_state_stream[col + row * size])
                          for col in range(size)] for row in range(size)]
@@ -54,7 +54,7 @@ class Board:
 
         return agg
 
-    def __stream_iterator(self, joiner):
+    def __stream_iterator(self, joiner: str):
         return joiner.join([x_token.__str__() for y_token in self.content for x_token in y_token])
 
     def get_state_stream(self):
@@ -88,7 +88,7 @@ class Solver:
         start = time.time()
         self.strategy.execute(initial_board)
         end = time.time()
-        print("Time for {} : {} seconds".format(type(self.strategy).__name__, end - start))
+        print("\nTime for {} : {} seconds".format(type(self.strategy).__name__, end - start))
 
 
 class Game:
@@ -96,7 +96,7 @@ class Game:
     Model to hold games described by a single line in the input file
     """
 
-    def __init__(self, size, max_depth, max_length, board_stream, game_id):
+    def __init__(self, size: int, max_depth: int, max_length: int, board_stream: str, game_id: int):
         self.game_id = game_id
         self.size = size
         if MIN_BOARD_SIZE > size > MAX_BOARD_SIZE:
