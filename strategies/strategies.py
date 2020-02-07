@@ -26,15 +26,21 @@ class DepthFirstSearchStrategy(SearchStrategy):
         self.open_list = []  # type: List[Tuple[Board, MoveSnapshot]]
         self.closed_list_set = set()
         self.result_move_snapshots = []  # type: List[MoveSnapshot]
+        self.shortest_move_snapshots = []  # type: List[MoveSnapshot]
 
     @staticmethod
     def __board_snapshot_tuple_sorter(item):
         return item[0]
 
-    def __alert_pos(self):
-        print("\nFound solution!\n")
-        for result_move_snapshot in self.result_move_snapshots:
-            print(result_move_snapshot)
+    def __alert_end(self):
+        if len(self.shortest_move_snapshots) != 0:
+            print("\nFound solution!\n")
+            for shortest_move_snapshot in self.shortest_move_snapshots:
+                print(shortest_move_snapshot)
+
+            print(len(self.shortest_move_snapshots))
+        else:
+            print("\nNo solution found")
 
     def execute(self, board: Board):
         self.current_depth = 1
@@ -45,8 +51,12 @@ class DepthFirstSearchStrategy(SearchStrategy):
 
             if board_to_test.is_final_state():
                 self.result_move_snapshots.append(snapshot)
-                self.__alert_pos()
-                return
+
+                # keep state of shortest path
+                if len(self.result_move_snapshots) < len(self.shortest_move_snapshots) \
+                        or len(self.shortest_move_snapshots) == 0:
+                    self.shortest_move_snapshots = self.result_move_snapshots.copy()
+                self.result_move_snapshots.pop()
             else:
                 self.closed_list_set.add(board_to_test.get_state_stream())
 
@@ -95,4 +105,4 @@ class DepthFirstSearchStrategy(SearchStrategy):
             # print(children)
             self.open_list += children
 
-        print("No solution found")
+        self.__alert_end()
