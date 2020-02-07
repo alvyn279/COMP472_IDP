@@ -106,12 +106,6 @@ class Game:
     def get_game_board(self):
         return Board(self.board_stream, self.size)
 
-    def get_max_depth(self):
-        return self.max_depth
-
-    def get_max_length(self):
-        return self.max_length
-
 
 class MoveSnapshot:
     """
@@ -119,9 +113,10 @@ class MoveSnapshot:
     board state that resulted from the touch
     """
 
-    def __init__(self, token_id: str, board: str):
+    def __init__(self, token_id: str, board: str, depth: int):
         self.token = token_id
         self.board_snapshot = board
+        self.depth = depth
 
     def __str__(self):
         return '{} {}'.format(self.token, self.board_snapshot)
