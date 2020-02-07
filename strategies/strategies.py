@@ -21,11 +21,14 @@ class DepthFirstSearchStrategy(SearchStrategy):
     """
 
     def __init__(self, max_depth):
-        self.max_depth = max_depth
-        self.closed_list_set = set()
-        self.open_list = []  # type: List[Tuple[Board, MoveSnapshot]]
         self.current_depth = 0
+        self.max_depth = max_depth
+        self.open_list = []  # type: List[Tuple[Board, MoveSnapshot]]
+        self.closed_list_set = set()
         self.result_move_snapshots = []  # type: List[MoveSnapshot]
+
+    def __board_snapshot_tuple_sorter(self, item):
+        return item[0]
 
     def execute(self, board: Board):
         self.current_depth = 1
@@ -34,21 +37,23 @@ class DepthFirstSearchStrategy(SearchStrategy):
         while len(self.open_list) != 0:
             board_to_test, snapshot = self.open_list.pop()
 
-            if self.current_depth + 1 > self.max_depth:
-                self.current_depth = snapshot.depth
-                self.result_move_snapshots = self.result_move_snapshots[0:snapshot.depth-1]
-                continue
-            else:
-                self.result_move_snapshots.append(snapshot)
-                self.current_depth += 1
-
             if board_to_test.is_final_state():
                 print("\nFound solution!\n")
+                self.result_move_snapshots.append(snapshot)
                 for result_move_snapshot in self.result_move_snapshots:
                     print(result_move_snapshot)
                 return
             else:
                 self.closed_list_set.add(board_to_test.get_state_stream())
+
+            # analyze board state from open list
+            if self.current_depth + 1 > self.max_depth:
+                self.current_depth = snapshot.depth
+                self.result_move_snapshots = self.result_move_snapshots[0:snapshot.depth - 1]
+                continue
+            else:
+                self.result_move_snapshots.append(snapshot)
+                self.current_depth += 1
 
             children: List[Tuple[Board, MoveSnapshot]] = []
 
@@ -77,14 +82,15 @@ class DepthFirstSearchStrategy(SearchStrategy):
                         new_board.content[x][y + 1].is_white_face = not new_board.content[x][
                             y + 1].is_white_face
 
-                    # TODO: sort children based on position of first 0
-
                     if new_board.get_state_stream() not in self.closed_list_set:
                         children.insert(0, (
                             new_board,
                             MoveSnapshot(token_to_test.get_identifier(), new_board.__str__(), self.current_depth)
                         ))
 
+            # sort children according to first occurrence of a white
+            children = sorted(children, key=self.__board_snapshot_tuple_sorter, reverse=True)
+            # print(children)
             self.open_list += children
 
         print("No solution found")

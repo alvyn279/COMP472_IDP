@@ -66,6 +66,12 @@ class Board:
     def __str__(self):  # hash
         return self.__stream_iterator(' ')
 
+    def __repr__(self):
+        return self.__stream_iterator(' ')
+
+    def __lt__(self, other):
+        return self.get_state_stream() < other.get_state_stream()
+
 
 class Solver:
     """
@@ -116,6 +122,8 @@ class MoveSnapshot:
     def __init__(self, token_id: str, board: str, depth: int):
         self.token = token_id
         self.board_snapshot = board
+        # store the depth at which the board snapshot was taken, to make sure to restore
+        # the correct state of the answer path while backtracking
         self.depth = depth
 
     def __str__(self):
