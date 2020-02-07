@@ -15,9 +15,9 @@ class GameLoader:
         file = open(self.input_file_path, "r")
         lines = file.readlines()
 
-        for line in lines:
+        for index, line in enumerate(lines):
             info = line.strip('\n').split(" ")
-            parseable_info = [int(info[0]), int(info[1]), int(info[2]), info[3]]
+            parseable_info = [int(info[0]), int(info[1]), int(info[2]), info[3], index]
             self.games.append(Game(*parseable_info))
 
     def get_games(self):

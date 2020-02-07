@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from models.game import Board
+from models.game import Board, MoveSnapshot
 from typing import List
 
 
@@ -25,6 +25,7 @@ class DepthFirstSearchStrategy(SearchStrategy):
         self.closed_list_set = set()
         self.open_list = []  # type: List[Board]
         self.current_depth = 0
+        self.result_move_snapshots = []
 
     def execute(self, board: Board):
         self.open_list.append(board)
@@ -32,13 +33,17 @@ class DepthFirstSearchStrategy(SearchStrategy):
 
         while len(self.open_list) != 0:
             board_to_test = self.open_list.pop()
+
             if self.current_depth != 1:
+                self.result_move_snapshots.pop()
                 self.current_depth -= 1
 
+            # print(self.current_depth)
             if board_to_test.is_final_state():
-                print(len(self.open_list))
-                print(len(self.closed_list_set))
                 print("\nFound solution!\n")
+                for result_move_snapshot in self.result_move_snapshots:
+                    print(result_move_snapshot)
+                # print(len(self.result_move_snapshots))
                 return
             else:
                 self.closed_list_set.add(board_to_test.get_state_stream())
@@ -68,8 +73,13 @@ class DepthFirstSearchStrategy(SearchStrategy):
                             new_board.content[x][y + 1].is_white_face = not new_board.content[x][
                                 y + 1].is_white_face
 
+                        # TODO: sort children based on position of first 0
+
                         if new_board.get_state_stream() not in self.closed_list_set:
                             self.open_list.append(new_board)
+                            self.result_move_snapshots.append(MoveSnapshot(token_to_test.get_identifier(),
+                                                                           new_board.get_state_stream()))
                             self.current_depth += 1
 
+        print("No solution found")
 

@@ -90,7 +90,8 @@ class Game:
     Model to hold games described by a single line in the input file
     """
 
-    def __init__(self, size, max_depth, max_length, board_stream):
+    def __init__(self, size, max_depth, max_length, board_stream, game_id):
+        self.game_id = game_id
         self.size = size
         if MIN_BOARD_SIZE > size > MAX_BOARD_SIZE:
             print("Given size is out of bounds, defaulting to minimum size...")
@@ -118,9 +119,9 @@ class MoveSnapshot:
     board state that resulted from the touch
     """
 
-    def __init__(self, token: Token, board_snapshot: str):
-        self.token: Token = token
-        self.board_snapshot = board_snapshot
+    def __init__(self, token_id: str, board: str):
+        self.token = token_id
+        self.board_snapshot = board
 
     def __str__(self):
-        return '{} {}'.format(self.token.get_identifier(), self.board_snapshot)
+        return '{} {}'.format(self.token, self.board_snapshot)
