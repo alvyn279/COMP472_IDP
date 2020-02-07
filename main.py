@@ -9,7 +9,7 @@ def main():
 
     for game in games:
         game_board = game.get_game_board()
-        dfs_strategy = DepthFirstSearchStrategy(game.max_depth)
+        dfs_strategy = DepthFirstSearchStrategy(game)
         solver = Solver(dfs_strategy)
 
         solver.solve(game_board)

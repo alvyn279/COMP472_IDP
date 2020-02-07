@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
-from models.game import Board, MoveSnapshot
+from models.game import Board, MoveSnapshot, Game
 from typing import List, Tuple
+import os
+
+NO_SOLUTION = 'No solution found'
+FOUND_SOLUTION = 'Found solution!'
 
 
 class SearchStrategy(ABC):
@@ -8,6 +12,15 @@ class SearchStrategy(ABC):
     Strategy interface for the different algorithms that will be used
     to solve Indonesian Dot Puzzle
     """
+
+    @property
+    @abstractmethod
+    def name(self):
+        pass
+
+    @abstractmethod
+    def _generate_output(self):
+        raise NotImplementedError
 
     @abstractmethod
     def execute(self, initial_board: Board):
@@ -20,23 +33,53 @@ class DepthFirstSearchStrategy(SearchStrategy):
     Follows the concept of depth-limited search
     """
 
-    def __init__(self, max_depth):
+    name = 'dfs'
+
+    def __init__(self, game: Game):
+        self.game = game
         self.current_depth = 0
-        self.max_depth = max_depth
+        self.max_depth = game.max_depth
         self.open_list = []  # type: List[Tuple[Board, MoveSnapshot]]
         self.closed_list_set = set()
         self.result_move_snapshots = []  # type: List[MoveSnapshot]
         self.shortest_move_snapshots = []  # type: List[MoveSnapshot]
+        self.search_seq_snapshots = []  # type: List[MoveSnapshot]
+
+    def _generate_output(self):
+        """
+        Generates the solution and search files for DFS
+        """
+        cur_dir = os.path.dirname(__file__)
+        # solution file
+        abs_sol_path = os.path.join(cur_dir, "./../output/{}_{}_solution.txt".format(self.game.game_id, self.name))
+        sol_f = open(abs_sol_path, "w+")
+        if len(self.shortest_move_snapshots) == 0:
+            sol_f.write(NO_SOLUTION)
+        else:
+            for shortest_move_snapshot in self.shortest_move_snapshots:
+                sol_f.write(shortest_move_snapshot.__str__() + '\n')
+        sol_f.close()
+
+        # search file
+        abs_srch_path = os.path.join(cur_dir, "./../output/{}_{}_search.txt".format(self.game.game_id, self.name))
+        srch_f = open(abs_srch_path, "w+")
+        for search_seq_snapshot in self.search_seq_snapshots:
+            srch_f.write("0\t0\t0\t{}\n".format(search_seq_snapshot.board_snapshot.replace(' ', '')))
+        srch_f.close()
 
     def __alert_end(self):
+        """
+        Prints to console the shortest path for DFS and/or status of the search
+        """
         if len(self.shortest_move_snapshots) != 0:
-            print("\nFound solution!\n")
+            print("\n{}\n".format(FOUND_SOLUTION))
             for shortest_move_snapshot in self.shortest_move_snapshots:
                 print(shortest_move_snapshot)
 
             print(len(self.shortest_move_snapshots))
         else:
-            print("\nNo solution found")
+            print("\n{}".format(NO_SOLUTION))
+        self._generate_output()
 
     def execute(self, board: Board):
         self.current_depth = 1
@@ -44,6 +87,7 @@ class DepthFirstSearchStrategy(SearchStrategy):
 
         while len(self.open_list) != 0:
             board_to_test, snapshot = self.open_list.pop()
+            self.search_seq_snapshots.append(snapshot)
 
             if board_to_test.is_final_state():
                 self.result_move_snapshots.append(snapshot)

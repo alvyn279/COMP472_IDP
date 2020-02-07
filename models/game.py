@@ -73,22 +73,21 @@ class Board:
         return self.get_state_stream() < other.get_state_stream()
 
 
-class Solver:
+class MoveSnapshot:
     """
-    Context for SearchStrategy/Solver for the puzzle
+    Model that will keep track of a token that was touched, as well as the resulting
+    board state that resulted from the touch
     """
 
-    def __init__(self, strategy):
-        self.strategy = strategy
+    def __init__(self, token_id: str, board: str, depth: int):
+        self.token = token_id
+        self.board_snapshot = board
+        # store the depth at which the board snapshot was taken, to make sure to restore
+        # the correct state of the answer path while backtracking
+        self.depth = depth
 
-    def set_strategy(self, strategy):
-        self.strategy = strategy
-
-    def solve(self, initial_board: Board):
-        start = time.time()
-        self.strategy.execute(initial_board)
-        end = time.time()
-        print("\nTime for {} : {} seconds".format(type(self.strategy).__name__, end - start))
+    def __str__(self):
+        return '{}\t{}'.format(self.token, self.board_snapshot)
 
 
 class Game:
@@ -113,18 +112,19 @@ class Game:
         return Board(self.board_stream, self.size)
 
 
-class MoveSnapshot:
+class Solver:
     """
-    Model that will keep track of a token that was touched, as well as the resulting
-    board state that resulted from the touch
+    Context for SearchStrategy/Solver for the puzzle
     """
 
-    def __init__(self, token_id: str, board: str, depth: int):
-        self.token = token_id
-        self.board_snapshot = board
-        # store the depth at which the board snapshot was taken, to make sure to restore
-        # the correct state of the answer path while backtracking
-        self.depth = depth
+    def __init__(self, strategy):
+        self.strategy = strategy
 
-    def __str__(self):
-        return '{} {}'.format(self.token, self.board_snapshot)
+    def set_strategy(self, strategy):
+        self.strategy = strategy
+
+    def solve(self, initial_board: Board):
+        start = time.time()
+        self.strategy.execute(initial_board)
+        end = time.time()
+        print("\nTime for {} : {} seconds".format(type(self.strategy).__name__, end - start))
