@@ -36,7 +36,7 @@ class DepthFirstSearchStrategy(SearchStrategy):
 
             if self.current_depth + 1 > self.max_depth:
                 self.current_depth = snapshot.depth
-                self.result_move_snapshots = self.result_move_snapshots[0:snapshot.depth]
+                self.result_move_snapshots = self.result_move_snapshots[0:snapshot.depth-1]
                 continue
             else:
                 self.result_move_snapshots.append(snapshot)
@@ -52,7 +52,7 @@ class DepthFirstSearchStrategy(SearchStrategy):
 
             children: List[Tuple[Board, MoveSnapshot]] = []
 
-            # uncover the graph
+            # uncover children
             for x_token in range(board.size):
                 for y_token in range(board.size):
 
