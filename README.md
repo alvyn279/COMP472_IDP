@@ -9,12 +9,13 @@ GitHub repo (please email me at alvyn279@gmail.com for access to this private re
 
 ### Running the project
 Input is currently hardcoded in main execution file. This will be improved in next iteration.
-
 There are also no dependencies to install.
 
 From a terminal,
 ```sh
 # move to root dir of project
+
+mkdir output/
 
 python main.py
 ```
