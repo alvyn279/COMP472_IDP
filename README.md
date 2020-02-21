@@ -7,6 +7,12 @@ GitHub repo (please email me at alvyn279@gmail.com for access to this private re
 
 ## Indonesian Dot Puzzle
 
+### Search algorithms
+
+- Limited depth-first search (DFS)
+- Best-first search (BFS)
+- Algorithm A*
+
 ### Running the project
 Input is currently hardcoded in main execution file. This will be improved in next iteration.
 There are also no dependencies to install.
