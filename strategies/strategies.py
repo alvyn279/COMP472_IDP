@@ -1,7 +1,13 @@
 from abc import ABC, abstractmethod
 from models.game import Board, MoveSnapshot, Game
 from typing import List, Tuple
-from constants.constants import NO_SOLUTION, FOUND_SOLUTION, DFS, REL_PATH_TO_SEARCH, REL_PATH_TO_SOLUTION
+from constants.constants import \
+    NO_SOLUTION, \
+    FOUND_SOLUTION, \
+    DFS, \
+    REL_PATH_TO_SEARCH, \
+    REL_PATH_TO_SOLUTION, \
+    BFS
 import os
 
 
@@ -46,6 +52,7 @@ class DepthFirstSearchStrategy(SearchStrategy):
     def _generate_output(self):
         """
         Generates the solution and search files for DFS
+        Particularity: finds the shortest path, as per the problem statement
         """
         cur_dir = os.path.dirname(__file__)
         # solution file
@@ -144,3 +151,100 @@ class DepthFirstSearchStrategy(SearchStrategy):
             self.open_list += children
 
         self.__alert_end()
+
+
+class HeuristicSearchStrategy(SearchStrategy):
+    """
+    Strategy model that holds the heuristic function used for heuristic-based search
+    """
+
+    @property
+    @abstractmethod
+    def name(self):
+        pass
+
+    @abstractmethod
+    def _generate_output(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def execute(self, initial_board: Board):
+        pass
+
+    def _is_even(self, number: int) -> bool:
+        return number % 2 == 0
+
+    def _build_expected_even_stream(self, n: int, start_char: str):
+        """
+        Builds the expected stream of characters expected for the even case of checkered-state
+        :param n:
+        :param start_char:
+        :return:
+        """
+        row_switcher = '1' if start_char == '1' else '0'
+        expected_stream = []
+
+        for x in range(n):
+            switcher = '1' if row_switcher == '1' else '0'
+            for y in range(n):
+                expected_stream.append(switcher)
+                switcher = '0' if switcher == '1' else '1'
+            row_switcher = '0' if row_switcher == '1' else '1'
+
+        return expected_stream
+
+    def checkered_heuristic(self, board: Board) -> int:
+        """
+        Looks for the number of inconsistencies from an expected state where all the tokens are
+        positioned in a checkered position relative to one another.
+        :param board:
+        :return:
+        """
+        board_state_stream = board.get_state_stream()
+        inconsistencies = 0
+
+        if self._is_even(board.size):
+            expected_stream = self._build_expected_even_stream(board.size, board_state_stream[0])
+            actual_stream = list(board_state_stream)
+
+            if len(expected_stream) != len(actual_stream):
+                raise Exception('Board state length does not match expected state length')
+
+            inconsistencies = sum(1 for i, j in zip(expected_stream, actual_stream) if i != j)
+
+        else:
+            # TODO: could be generator
+            switcher = '1' if board_state_stream.startswith(1) else '0'
+
+            for char in board_state_stream:
+                if char != switcher:
+                    inconsistencies += 1
+                switcher = '0' if switcher == '1' else '1'
+
+        return inconsistencies
+
+
+class BestFirstSearchStrategy(HeuristicSearchStrategy):
+    """
+    Best-first search strategy
+    Follows the concept of a heuristic search, while choosing the smallest
+    return value for a heuristic function from the open list
+    """
+
+    name = BFS
+
+    def __init__(self, game: Game):
+        self.game = game
+        self.current_path_length = 0
+        self.max_search_path_length = game.max_length
+        self.open_list = []  # type: List[Tuple[Board, MoveSnapshot]]
+        self.closed_list_set = set()
+        self.result_move_snapshots = []  # type: List[MoveSnapshot]
+        self.shortest_move_snapshots = []  # type: List[MoveSnapshot]
+        self.search_seq_snapshots = []  # type: List[MoveSnapshot]
+
+    def _generate_output(self):
+        raise NotImplementedError
+
+    def execute(self):
+        pass
