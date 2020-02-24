@@ -249,9 +249,33 @@ class BestFirstSearchStrategy(HeuristicSearchStrategy):
         self.result_move_snapshots = []  # type: List[MoveSnapshot]
         self.search_path_snapshots = []  # type: List[MoveSnapshot]
 
-    def _generate_output(self):
-        # TODO: print to file
-        pass
+    def _generate_output(self, no_solution=False):
+        """
+        Generates the solution and search files for BeFS
+        """
+
+        cur_dir = os.path.dirname(__file__)
+        # solution file
+        abs_sol_path = os.path.join(cur_dir, REL_PATH_TO_SOLUTION.format(self.game.game_id, self.name))
+        sol_f = open(abs_sol_path, "w+")
+        if no_solution:
+            sol_f.write(NO_SOLUTION)
+        else:
+            for result_move_snapshot in self.result_move_snapshots:
+                sol_f.write(result_move_snapshot.__str__() + '\n')
+        sol_f.close()
+
+        # search file
+        abs_srch_path = os.path.join(cur_dir, REL_PATH_TO_SEARCH.format(self.game.game_id, self.name))
+        srch_f = open(abs_srch_path, "w+")
+        for search_path_snapshot in self.search_path_snapshots:
+            srch_f.write('{}\t{}\t{}\t{}\n'
+                         .format(search_path_snapshot.f_of_n,
+                                 search_path_snapshot.g_of_n,
+                                 search_path_snapshot.h_of_n,
+                                 search_path_snapshot.__str__())
+                         )
+        srch_f.close()
 
     def _alert_end(self, no_solution=False):
 
@@ -263,7 +287,7 @@ class BestFirstSearchStrategy(HeuristicSearchStrategy):
         else:
             print("\n{}".format(NO_SOLUTION))
 
-        self._generate_output()
+        self._generate_output(no_solution)
         pass
 
     def execute(self, board: Board):
@@ -315,12 +339,15 @@ class BestFirstSearchStrategy(HeuristicSearchStrategy):
 
                         if new_board.get_state_stream() not in self.closed_list_set \
                                 and new_board.get_state_stream() not in self.open_list_set:
+                            priority_val: int = self.checkered_heuristic(new_board)
+                            new_move_snapshot: MoveSnapshot = MoveSnapshot(token_to_test.get_identifier(),
+                                                                           new_board.__str__(),
+                                                                           self.current_depth + 1)
+                            new_move_snapshot.set_eval(0, priority_val)
                             children.append(OpenListSnapshot(
                                 new_board,
-                                MoveSnapshot(token_to_test.get_identifier(),
-                                             new_board.__str__(),
-                                             self.current_depth + 1),
-                                self.checkered_heuristic(new_board)
+                                new_move_snapshot,
+                                priority_val
                             ))
 
                 for child in children:

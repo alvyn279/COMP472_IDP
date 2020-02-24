@@ -85,6 +85,14 @@ class MoveSnapshot:
         # store the depth at which the board snapshot was taken, to make sure to restore
         # the correct state of the answer path while backtracking
         self.depth = depth
+        self.g_of_n = 0
+        self.h_of_n = 0
+        self.f_of_n = 0
+
+    def set_eval(self, g: int, h: int):
+        self.g_of_n = g
+        self.h_of_n = h
+        self.f_of_n = g + h
 
     def __str__(self):
         return '{}\t{}'.format(self.token, self.board_snapshot)
