@@ -299,9 +299,9 @@ class HeuristicSearchStrategy(SearchStrategy):
 
         try:
             while not self.open_list.empty():
-                open_list_snapshot = self.open_list.get()  # poll from priority queue
-                board_to_test = open_list_snapshot.get_board()
-                snapshot = open_list_snapshot.get_move_snapshot()
+                open_list_snapshot: OpenListSnapshot = self.open_list.get()  # poll from priority queue
+                board_to_test: Board = open_list_snapshot.get_board()
+                snapshot: MoveSnapshot = open_list_snapshot.get_move_snapshot()
                 self.search_path_snapshots.append(snapshot)
 
                 # handle an element polled from priority queue that does not follow current solution path
