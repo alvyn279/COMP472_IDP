@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from exceptions.exceptions import ExceedingSearchPathLengthError
 from models.game import Board, MoveSnapshot, Game, OpenListSnapshot
-from typing import List, Tuple
+from typing import List, Tuple, Set
 from constants.constants import \
     NO_SOLUTION, \
     FOUND_SOLUTION, \
@@ -206,6 +206,10 @@ class HeuristicSearchStrategy(SearchStrategy):
         board_state_stream: str = board.get_state_stream()
         inconsistencies = 0
 
+        # if board is perfect set to max priority
+        if board.is_final_state():
+            return 0
+
         if self._is_even(board.size):
             expected_stream = self._build_expected_even_stream(board.size, board_state_stream[0])
             actual_stream = list(board_state_stream)
@@ -217,7 +221,7 @@ class HeuristicSearchStrategy(SearchStrategy):
 
         else:
             # TODO: could be generator
-            switcher = '1' if board_state_stream.startswith(1) else '0'
+            switcher = '1' if board_state_stream.startswith('1') else '0'
 
             for char in board_state_stream:
                 if char != switcher:
@@ -240,16 +244,25 @@ class BestFirstSearchStrategy(HeuristicSearchStrategy):
         self.game = game
         self.current_depth = -1
         self.open_list = Q.PriorityQueue()  # type: Q.PriorityQueue[OpenListSnapshot]
-        self.closed_list_set = set()
+        self.open_list_set = set()  # type: Set[str]
+        self.closed_list_set = set()  # type: Set[str]
         self.result_move_snapshots = []  # type: List[MoveSnapshot]
         self.search_path_snapshots = []  # type: List[MoveSnapshot]
 
     def _generate_output(self):
         # TODO: print to file
-        raise NotImplementedError
+        pass
 
-    def _alert_end(self):
-        # TODO: print to console
+    def _alert_end(self, no_solution=False):
+
+        if not no_solution:
+            print("\n{}\n".format(FOUND_SOLUTION))
+            for result_move_snapshot in self.result_move_snapshots:
+                print(result_move_snapshot)
+
+        else:
+            print("\n{}".format(NO_SOLUTION))
+
         self._generate_output()
         pass
 
@@ -261,21 +274,20 @@ class BestFirstSearchStrategy(HeuristicSearchStrategy):
                 open_list_snapshot = self.open_list.get()  # poll from priority queue
                 board_to_test = open_list_snapshot.get_board()
                 snapshot = open_list_snapshot.get_move_snapshot()
-
                 self.search_path_snapshots.append(snapshot)
-
-                # check for end conditions
-                if board_to_test.is_final_state():
-                    self.result_move_snapshots.append(snapshot)
-                elif len(self.search_path_snapshots) > self.game.max_length:
-                    raise ExceedingSearchPathLengthError("Assuming no solution for BFS")
-
-                self.current_depth += 1
 
                 # handle an element polled from priority queue that does not follow current solution path
                 if snapshot.depth != self.current_depth:
                     self.current_depth = snapshot.depth
-                    self.result_move_snapshots = self.result_move_snapshots[0:snapshot.depth - 1]
+                    self.result_move_snapshots = self.result_move_snapshots[0:snapshot.depth]
+
+                # check for end conditions
+                if board_to_test.is_final_state():
+                    self.result_move_snapshots.append(snapshot)
+                    break
+                elif len(self.search_path_snapshots) > self.game.max_length:
+                    raise ExceedingSearchPathLengthError("Assuming no solution for BFS")
+                self.current_depth += 1
 
                 # add board to test to potential solution and uncover its children
                 self.result_move_snapshots.append(snapshot)
@@ -301,16 +313,21 @@ class BestFirstSearchStrategy(HeuristicSearchStrategy):
                         if y < (len(new_board.content[x]) - 1):
                             new_board.content[x][y + 1].flip()
 
-                        if new_board.get_state_stream() not in self.closed_list_set:
+                        if new_board.get_state_stream() not in self.closed_list_set \
+                                and new_board.get_state_stream() not in self.open_list_set:
                             children.append(OpenListSnapshot(
                                 new_board,
-                                MoveSnapshot(token_to_test.get_identifier(), new_board.__str__(), self.current_depth),
+                                MoveSnapshot(token_to_test.get_identifier(),
+                                             new_board.__str__(),
+                                             self.current_depth + 1),
                                 self.checkered_heuristic(new_board)
                             ))
 
                 for child in children:
                     self.open_list.put(child)
+                    self.open_list_set.add(child.get_board().get_state_stream())
 
-            self._alert_end()
+            self._alert_end(False)
+
         except ExceedingSearchPathLengthError:
-            self._generate_output()
+            self._alert_end(True)

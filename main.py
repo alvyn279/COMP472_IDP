@@ -1,6 +1,6 @@
 from game_loader import GameLoader
 from models.game import Solver
-from strategies.strategies import DepthFirstSearchStrategy
+from strategies.strategies import DepthFirstSearchStrategy, BestFirstSearchStrategy
 
 
 def main():
@@ -10,9 +10,13 @@ def main():
     for game in games:
         game_board = game.get_game_board()
         dfs_strategy = DepthFirstSearchStrategy(game)
-        solver = Solver(dfs_strategy)
+        befs_strategy = BestFirstSearchStrategy(game)
 
-        solver.solve(game_board)
+        solver_dfs = Solver(dfs_strategy)
+        solver_befs = Solver(befs_strategy)
+
+        # solver_dfs.solve(game_board)
+        solver_befs.solve(game_board)
 
 
 if __name__ == "__main__":
