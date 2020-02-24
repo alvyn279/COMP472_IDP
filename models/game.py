@@ -79,7 +79,7 @@ class MoveSnapshot:
     board state that resulted from the touch
     """
 
-    def __init__(self, token_id: str, board: str, depth: int):
+    def __init__(self, token_id: str, board: str, depth: int = 0):
         self.token = token_id
         self.board_snapshot = board
         # store the depth at which the board snapshot was taken, to make sure to restore
@@ -88,6 +88,26 @@ class MoveSnapshot:
 
     def __str__(self):
         return '{}\t{}'.format(self.token, self.board_snapshot)
+
+
+class OpenListSnapshot:
+    """
+    Model that holds MoveSnapshot and Board states but also a priority representation
+    """
+
+    def __init__(self, board: Board, move_snapshot: MoveSnapshot, priority: int):
+        self.board = board
+        self.move_snapshot = move_snapshot
+        self.priority = priority
+
+    def get_board(self):
+        return self.board
+
+    def get_move_snapshot(self):
+        return self.move_snapshot
+
+    def __lt__(self, other):
+        return self.priority < other.priority
 
 
 class Game:

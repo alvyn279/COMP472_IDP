@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from models.game import Board, MoveSnapshot, Game
+from exceptions.exceptions import ExceedingSearchPathLengthError
+from models.game import Board, MoveSnapshot, Game, OpenListSnapshot
 from typing import List, Tuple
 from constants.constants import \
     NO_SOLUTION, \
@@ -7,8 +8,10 @@ from constants.constants import \
     DFS, \
     REL_PATH_TO_SEARCH, \
     REL_PATH_TO_SOLUTION, \
-    BFS
+    BeFS
 import os
+
+import queue as Q
 
 
 class SearchStrategy(ABC):
@@ -174,7 +177,7 @@ class HeuristicSearchStrategy(SearchStrategy):
     def _is_even(self, number: int) -> bool:
         return number % 2 == 0
 
-    def _build_expected_even_stream(self, n: int, start_char: str):
+    def _build_expected_even_stream(self, n: int, start_char: str) -> List[str]:
         """
         Builds the expected stream of characters expected for the even case of checkered-state
         :param n:
@@ -200,7 +203,7 @@ class HeuristicSearchStrategy(SearchStrategy):
         :param board:
         :return:
         """
-        board_state_stream = board.get_state_stream()
+        board_state_stream: str = board.get_state_stream()
         inconsistencies = 0
 
         if self._is_even(board.size):
@@ -231,20 +234,83 @@ class BestFirstSearchStrategy(HeuristicSearchStrategy):
     return value for a heuristic function from the open list
     """
 
-    name = BFS
+    name = BeFS
 
     def __init__(self, game: Game):
         self.game = game
-        self.current_path_length = 0
-        self.max_search_path_length = game.max_length
-        self.open_list = []  # type: List[Tuple[Board, MoveSnapshot]]
+        self.current_depth = -1
+        self.open_list = Q.PriorityQueue()  # type: Q.PriorityQueue[OpenListSnapshot]
         self.closed_list_set = set()
         self.result_move_snapshots = []  # type: List[MoveSnapshot]
-        self.shortest_move_snapshots = []  # type: List[MoveSnapshot]
-        self.search_seq_snapshots = []  # type: List[MoveSnapshot]
+        self.search_path_snapshots = []  # type: List[MoveSnapshot]
 
     def _generate_output(self):
+        # TODO: print to file
         raise NotImplementedError
 
-    def execute(self):
+    def _alert_end(self):
+        # TODO: print to console
+        self._generate_output()
         pass
+
+    def execute(self, board: Board):
+        self.open_list.put(OpenListSnapshot(board, MoveSnapshot('0 ', board.__str__()), 0))
+
+        try:
+            while not self.open_list.empty():
+                open_list_snapshot = self.open_list.get()  # poll from priority queue
+                board_to_test = open_list_snapshot.get_board()
+                snapshot = open_list_snapshot.get_move_snapshot()
+
+                self.search_path_snapshots.append(snapshot)
+
+                # check for end conditions
+                if board_to_test.is_final_state():
+                    self.result_move_snapshots.append(snapshot)
+                elif len(self.search_path_snapshots) > self.game.max_length:
+                    raise ExceedingSearchPathLengthError("Assuming no solution for BFS")
+
+                self.current_depth += 1
+
+                # handle an element polled from priority queue that does not follow current solution path
+                if snapshot.depth != self.current_depth:
+                    self.current_depth = snapshot.depth
+                    self.result_move_snapshots = self.result_move_snapshots[0:snapshot.depth - 1]
+
+                # add board to test to potential solution and uncover its children
+                self.result_move_snapshots.append(snapshot)
+                self.closed_list_set.add(board_to_test.get_state_stream())
+                children: List[OpenListSnapshot] = []
+
+                for x_token in range(board.size):
+                    for y_token in range(board.size):
+
+                        new_board = Board(board_to_test.get_state_stream(), board.size)
+                        token_to_test = new_board.content[x_token][y_token]
+
+                        x = token_to_test.x
+                        y = token_to_test.y
+
+                        new_board.content[x][y].flip()
+                        if x > 0:
+                            new_board.content[x - 1][y].flip()
+                        if x < (len(new_board.content) - 1):
+                            new_board.content[x + 1][y].flip()
+                        if y > 0:
+                            new_board.content[x][y - 1].flip()
+                        if y < (len(new_board.content[x]) - 1):
+                            new_board.content[x][y + 1].flip()
+
+                        if new_board.get_state_stream() not in self.closed_list_set:
+                            children.append(OpenListSnapshot(
+                                new_board,
+                                MoveSnapshot(token_to_test.get_identifier(), new_board.__str__(), self.current_depth),
+                                self.checkered_heuristic(new_board)
+                            ))
+
+                for child in children:
+                    self.open_list.put(child)
+
+            self._alert_end()
+        except ExceedingSearchPathLengthError:
+            self._generate_output()
