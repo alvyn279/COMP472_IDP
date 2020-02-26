@@ -33,3 +33,6 @@ python main.py
 [puzzle_num]_[algo]_search.txt
 ```
 
+#### Dependencies/References
+
+This project uses a customized priority queue implementation by Edward L Platt. [Here](https://github.com/elplatt/python-priorityq) is the library's repository.
