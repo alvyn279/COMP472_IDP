@@ -16,11 +16,11 @@ def main():
         befs_strategy = BestFirstSearchStrategy(game)
         astar_strategy = AStarSearchStrategy(game)
 
-        # solver_dfs = Solver(dfs_strategy)
+        solver_dfs = Solver(dfs_strategy)
         solver_befs = Solver(befs_strategy)
         solver_astar = Solver(astar_strategy)
 
-        # solver_dfs.solve(game_board)
+        solver_dfs.solve(game_board)
         solver_befs.solve(game_board)
         solver_astar.solve(game_board)
 

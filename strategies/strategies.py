@@ -177,7 +177,7 @@ class HeuristicSearchStrategy(SearchStrategy):
         pass
 
     @abstractmethod
-    def _add_to_priority_queue(self, new_board: Board, token_to_test: Token) -> List[OpenListSnapshot]:
+    def _build_new_open_list_snapshot(self, new_board: Board, token_to_test: Token) -> OpenListSnapshot:
         """
         Defines the parameters of the priority with which the move is added to the priority queue
         :param new_board:
@@ -307,7 +307,7 @@ class HeuristicSearchStrategy(SearchStrategy):
                 # handle an element polled from priority queue that does not follow current solution path
                 if snapshot.depth != self.current_depth:
                     self.current_depth = snapshot.depth
-                    self.result_move_snapshots = self.result_move_snapshots[0:snapshot.depth]
+                    self.result_move_snapshots = self.result_move_snapshots[0:snapshot.depth+1]
 
                 # check for end conditions
                 if board_to_test.is_final_state():
@@ -320,7 +320,6 @@ class HeuristicSearchStrategy(SearchStrategy):
                 # add board to test to potential solution and uncover its children
                 self.result_move_snapshots.append(snapshot)
                 self.closed_list_set.add(board_to_test.get_state_stream())
-                children: List[OpenListSnapshot] = []
 
                 for x_token in range(board.size):
                     for y_token in range(board.size):
@@ -341,13 +340,21 @@ class HeuristicSearchStrategy(SearchStrategy):
                         if y < (len(new_board.content[x]) - 1):
                             new_board.content[x][y + 1].flip()
 
-                        # create list of OpenListSnapshot objects with custom priority
-                        children += self._add_to_priority_queue(new_board, token_to_test)
+                        new_open_list_snapshot = self._build_new_open_list_snapshot(new_board, token_to_test)
 
-                for child in children:
-                    # offer to priority queue
-                    self.open_list.push(child)
-                    self.open_list_dict[child.get_board().get_state_stream()] = child.priority
+                        if new_open_list_snapshot is not None:
+                            new_priority = new_open_list_snapshot.priority
+
+                            if new_board.get_state_stream() in self.open_list_dict:
+                                old_priority = self.open_list_dict[new_board.get_state_stream()]
+
+                                if old_priority > new_priority:
+                                    self.open_list.remove(new_open_list_snapshot)
+                                    self.open_list.push(new_open_list_snapshot)
+                                    self.open_list_dict[new_board.get_state_stream()] = new_priority
+                            else:
+                                self.open_list.push(new_open_list_snapshot)
+                                self.open_list_dict[new_board.get_state_stream()] = new_priority
 
             self._alert_end(False)
 
@@ -367,35 +374,28 @@ class BestFirstSearchStrategy(HeuristicSearchStrategy):
     def __init__(self, game: Game):
         HeuristicSearchStrategy.__init__(self, game)
 
-    def _add_to_priority_queue(self, new_board: Board, token_to_test: Token) -> List[OpenListSnapshot]:
+    def _build_new_open_list_snapshot(self, new_board: Board, token_to_test: Token) -> OpenListSnapshot:
         """
         Adds to priority queue solely with knowledge of heuristic function h(n)
         :param new_board:
         :param token_to_test:
         :return:
         """
-        children: List[OpenListSnapshot] = []
 
         if new_board.get_state_stream() not in self.closed_list_set:
             estimate_current_to_finish = self.checkered_heuristic(new_board)  # h(n)
             priority_val: int = estimate_current_to_finish
             new_move_snapshot: MoveSnapshot = MoveSnapshot(token_to_test.get_identifier(),
                                                            new_board.__str__(),
-                                                           self.current_depth + 1)
+                                                           self.current_depth)
             new_move_snapshot.set_eval(0, estimate_current_to_finish)
-            new_open_list_snapshot: OpenListSnapshot = OpenListSnapshot(
+            return OpenListSnapshot(
                 new_board,
                 new_move_snapshot,
                 priority_val
             )
 
-            if new_board.get_state_stream() in self.open_list_dict \
-                    and self.open_list_dict[new_board.get_state_stream()] > new_open_list_snapshot.priority:
-                self.open_list.remove(new_open_list_snapshot)
-
-            children.append(new_open_list_snapshot)
-
-        return children
+        return None
 
 
 class AStarSearchStrategy(HeuristicSearchStrategy):
@@ -409,7 +409,7 @@ class AStarSearchStrategy(HeuristicSearchStrategy):
     def __init__(self, game: Game):
         HeuristicSearchStrategy.__init__(self, game)
 
-    def _add_to_priority_queue(self, new_board: Board, token_to_test: Token) -> List[OpenListSnapshot]:
+    def _build_new_open_list_snapshot(self, new_board: Board, token_to_test: Token) -> OpenListSnapshot:
         """
         Adds to priority queue with heuristic function h(n) but also with actual cost
         function g(n)
@@ -417,27 +417,19 @@ class AStarSearchStrategy(HeuristicSearchStrategy):
         :param token_to_test:
         :return:
         """
-        children: List[OpenListSnapshot] = []
 
-        if new_board.get_state_stream() not in self.closed_list_set \
-                and new_board.get_state_stream() not in self.open_list_dict:
+        if new_board.get_state_stream() not in self.closed_list_set:
             estimate_current_to_finish: int = self.checkered_heuristic(new_board)  # h(n)
-            start_to_current: int = self.current_depth + 1  # g(n)
+            start_to_current: int = self.current_depth  # g(n)
             priority_val: int = estimate_current_to_finish + start_to_current  # f(n)
             new_move_snapshot: MoveSnapshot = MoveSnapshot(token_to_test.get_identifier(),
                                                            new_board.__str__(),
-                                                           self.current_depth + 1)
-            new_move_snapshot.set_eval(start_to_current, priority_val)
-            new_open_list_snapshot: OpenListSnapshot = OpenListSnapshot(
+                                                           self.current_depth)
+            new_move_snapshot.set_eval(start_to_current, estimate_current_to_finish)
+            return OpenListSnapshot(
                 new_board,
                 new_move_snapshot,
                 priority_val
             )
 
-            if new_board.get_state_stream() in self.open_list_dict \
-                    and self.open_list_dict[new_board.get_state_stream()] > new_open_list_snapshot.priority:
-                self.open_list.remove(new_open_list_snapshot)
-
-            children.append(new_open_list_snapshot)
-
-        return children
+        return None

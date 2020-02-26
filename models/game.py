@@ -117,6 +117,15 @@ class OpenListSnapshot:
     def __lt__(self, other):
         return self.priority < other.priority
 
+    def __gt__(self, other):
+        return self.priority > other.priority
+
+    def __hash__(self):
+        return hash(self.board.get_state_stream())
+
+    def __eq__(self, other):
+        return self.board.get_state_stream() == other.board.get_state_stream()
+
 
 class Game:
     """
