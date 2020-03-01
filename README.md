@@ -1,11 +1,14 @@
 # COMP472
-Artificial Intelligence
+Artificial Intelligence - Indonesian Dot Puzzle
 
 Duy-Khoi Le - 40026393
 
 GitHub repo (please email me at alvyn279@gmail.com for access to this private repo): https://github.com/alvyn279/COMP472_IDP
 
 ## Indonesian Dot Puzzle
+
+### Deliverables
+Please find the project report and expectations of originality under `docs/`
 
 ### Search algorithms
 
@@ -27,6 +30,8 @@ python main.py
 ```
 
 #### Output
+
+In `output` directory,
 
 ```
 [puzzle_num]_[algo]_solutions.txt
